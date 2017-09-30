@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="vm"
+            type="jp.cordea.inco.viewmodels.BlacklistViewModel" />
+    </data>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:adapter="@{vm.adapter}"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:setOnItemClickListener="@{vm.onItemClickListener}"
+        app:setOnItemLongClickListener="@{vm.onItemLongClickListener}"
+        tools:context="jp.cordea.inco.activities.BlacklistActivity"
+        tools:showIn="@layout/activity_blacklist" />
+
+</layout>
