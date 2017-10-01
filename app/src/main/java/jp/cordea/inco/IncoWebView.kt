@@ -52,6 +52,9 @@ class IncoWebView @JvmOverloads constructor(
         if (nonce.isBlank()) {
             nonce = HistoryRepository.refreshNonce(context)
         }
+        settings.apply {
+            javaScriptEnabled = Key.javaScriptEnabled(context)
+        }
         webViewClient = object : WebViewClient() {
             private val urls = arrayListOf<String>()
 

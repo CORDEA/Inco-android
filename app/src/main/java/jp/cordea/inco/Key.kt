@@ -12,6 +12,8 @@ class Key {
 
         private val NonceKey = "NonceKey"
 
+        private val JavaScriptKey = "JavaScriptKey"
+
         fun setPassword(context: Context, password: String) {
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
             pref.edit().putString(PasswordKey, password).apply()
@@ -40,6 +42,16 @@ class Key {
         fun getCipherKey(context: Context): String {
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
             return pref.getString(CipherKeyKey, "")
+        }
+
+        fun javaScriptEnabled(context: Context): Boolean {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            return pref.getBoolean(JavaScriptKey, false)
+        }
+
+        fun setJavaScriptEnabled(context: Context, boolean: Boolean) {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            pref.edit().putBoolean(JavaScriptKey, boolean).apply()
         }
     }
 }

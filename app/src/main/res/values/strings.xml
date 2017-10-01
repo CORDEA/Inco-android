@@ -18,4 +18,6 @@
     <string name="rule_edit">Edit rule</string>
 
     <string name="settings_blacklist">Blacklist</string>
+    <string name="settings_javascript_enable">Enable JavaScript</string>
+    <string name="settings_javascript_disable">Disable JavaScript</string>
 </resources>
