@@ -54,6 +54,7 @@ class IncoWebView @JvmOverloads constructor(
         }
         settings.apply {
             javaScriptEnabled = Key.javaScriptEnabled(context)
+            domStorageEnabled = false
         }
         webViewClient = object : WebViewClient() {
             private val urls = arrayListOf<String>()
