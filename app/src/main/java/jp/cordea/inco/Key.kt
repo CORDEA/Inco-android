@@ -3,55 +3,25 @@ package jp.cordea.inco
 import android.content.Context
 import android.preference.PreferenceManager
 
-class Key {
+object Key {
 
-    companion object {
-        private val PasswordKey = "PasswordKey"
+    private const val JavaScriptKey = "JavaScriptKey"
 
-        private val CipherKeyKey = "CipherKeyKey"
-
-        private val NonceKey = "NonceKey"
-
-        private val JavaScriptKey = "JavaScriptKey"
-
-        fun setPassword(context: Context, password: String) {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            pref.edit().putString(PasswordKey, password).apply()
+    var token = ""
+        get() {
+            if (field.isBlank()) {
+                throw IllegalStateException()
+            }
+            return field
         }
 
-        fun getPassword(context: Context): String {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            return pref.getString(PasswordKey, "")
-        }
+    fun javaScriptEnabled(context: Context): Boolean {
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        return pref.getBoolean(JavaScriptKey, false)
+    }
 
-        fun setCipherKey(context: Context, cipher: String) {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            pref.edit().putString(CipherKeyKey, cipher).apply()
-        }
-
-        fun setNonce(context: Context, nonce: String) {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            pref.edit().putString(NonceKey, nonce).apply()
-        }
-
-        fun getNonce(context: Context): String {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            return pref.getString(NonceKey, "")
-        }
-
-        fun getCipherKey(context: Context): String {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            return pref.getString(CipherKeyKey, "")
-        }
-
-        fun javaScriptEnabled(context: Context): Boolean {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            return pref.getBoolean(JavaScriptKey, false)
-        }
-
-        fun setJavaScriptEnabled(context: Context, boolean: Boolean) {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            pref.edit().putBoolean(JavaScriptKey, boolean).apply()
-        }
+    fun setJavaScriptEnabled(context: Context, boolean: Boolean) {
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        pref.edit().putBoolean(JavaScriptKey, boolean).apply()
     }
 }

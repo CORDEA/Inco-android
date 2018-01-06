@@ -2,43 +2,29 @@ package jp.cordea.inco.viewmodels
 
 import android.content.Context
 import android.view.View
-import jp.cordea.inco.CipherUtils
-import jp.cordea.inco.HashGenerator
 import jp.cordea.inco.Key
-import jp.cordea.inco.R
+import jp.cordea.inco.api.ApiClient
+import kotlinx.coroutines.experimental.async
+import ru.gildor.coroutines.retrofit.await
 
 class SignInViewModel(context: Context) {
 
-    private val generator = HashGenerator()
-
-    private val savedPassword = Key.getPassword(context)
-
-    private val isExistsPassword = savedPassword.isNotBlank()
-
     var password: String = ""
 
-    val buttonText = context.resources.getString(
-            if (isExistsPassword) {
-                R.string.title_sign_in_button
-            } else {
-                R.string.title_sign_up_button
-            }
-    )
+    var username: String = ""
 
     val onClick = View.OnClickListener {
-        if (password.isBlank()) {
+        if (username.isBlank() || password.isBlank()) {
             return@OnClickListener
         }
-        val hash = generator.generate(password)
-        if (isExistsPassword) {
-            if (savedPassword == hash) {
-                context.startActivity(MainViewModel.createIntent(context))
+
+        async {
+            val token = ApiClient.login(username, password).await()
+            if (token.token.isBlank()) {
+                return@async
             }
-            return@OnClickListener
+            Key.token = token.token
+            context.startActivity(MainViewModel.createIntent(context))
         }
-        Key.setPassword(context, hash)
-        val key = CipherUtils.generateKey()
-        Key.setCipherKey(context, key)
-        context.startActivity(MainViewModel.createIntent(context))
     }
 }
