@@ -9,8 +9,15 @@ class HistoryItemViewModel(
         val onClick: () -> Unit,
         val onLongClick: () -> Unit
 ) {
-    constructor(title: String, history: History,
-                onClick: () -> Unit,
-                onLongClick: () -> Unit
-    ) : this(title, history.updatedAt.toString(), history.count, onClick, onLongClick)
+    constructor(
+            title: String,
+            history: History,
+            onClick: () -> Unit,
+            onLongClick: () -> Unit
+    ) : this(
+            title,
+            history.createdAt,
+            history.count,
+            onClick, onLongClick
+    )
 }
