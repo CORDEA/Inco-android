@@ -8,9 +8,12 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import jp.cordea.inco.models.Rule
 import jp.cordea.inco.repositories.BlacklistRepository
 import jp.cordea.inco.repositories.HistoryRepository
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
+import ru.gildor.coroutines.retrofit.awaitResult
 import java.io.ByteArrayInputStream
 
 class IncoWebView @JvmOverloads constructor(
@@ -27,11 +30,7 @@ class IncoWebView @JvmOverloads constructor(
 
     private var listener: OnLoadFinishedListener? = null
 
-    private val rules = BlacklistRepository.getRules()
-
-    private val key = Key.getCipherKey(context)
-
-    private var nonce = Key.getNonce(context)
+    private var rules: List<Rule> = emptyList()
 
     private var refreshingListener: InverseBindingListener? = null
 
@@ -49,8 +48,8 @@ class IncoWebView @JvmOverloads constructor(
     }
 
     init {
-        if (nonce.isBlank()) {
-            nonce = HistoryRepository.refreshNonce(context)
+        launch {
+            rules = BlacklistRepository.getRules().await()
         }
         settings.apply {
             javaScriptEnabled = Key.javaScriptEnabled(context)
@@ -64,21 +63,19 @@ class IncoWebView @JvmOverloads constructor(
                     view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 val url = request.url.toString()
                 var isMatch = false
-                return runBlocking {
-                    rules.await().forEach {
-                        val reg = it.regex.toRegex()
-                        if (reg.containsMatchIn(url)) {
-                            isMatch = true
-                            return@forEach
-                        }
+                rules.forEach {
+                    val reg = it.regex.toRegex()
+                    if (reg.containsMatchIn(url)) {
+                        isMatch = true
+                        return@forEach
                     }
-                    if (isMatch) {
-                        val st = ByteArrayInputStream(ByteArray(0))
-                        WebResourceResponse("text/html", "utf-8", st)
-                    } else {
-                        urls.add(url)
-                        null
-                    }
+                }
+                return if (isMatch) {
+                    val st = ByteArrayInputStream(ByteArray(0))
+                    WebResourceResponse("text/html", "utf-8", st)
+                } else {
+                    urls.add(url)
+                    null
                 }
             }
 
@@ -90,10 +87,10 @@ class IncoWebView @JvmOverloads constructor(
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
 
-                HistoryRepository.updateHistory(url, key, nonce).invokeOnCompletion {
-                    it?.printStackTrace()
+                launch(UI) {
+                    HistoryRepository.postHistory(url).awaitResult()
+                    listener?.onLoadFinished(urls)
                 }
-                listener?.onLoadFinished(urls)
             }
         }
     }
