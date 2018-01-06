@@ -12,7 +12,8 @@ import jp.cordea.inco.R
 import jp.cordea.inco.activities.BlacklistActivity
 import jp.cordea.inco.adapters.BindingListAdapter
 import jp.cordea.inco.repositories.BlacklistRepository
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 
 class BlacklistViewModel(context: Context) : BaseObservable() {
 
@@ -49,7 +50,7 @@ class BlacklistViewModel(context: Context) : BaseObservable() {
             R.string.rule_delete,
             R.drawable.ic_delete_black_24dp,
             View.OnClickListener {
-                runBlocking {
+                launch(UI) {
                     val item = items[selectedPosition]
                     BlacklistRepository.deleteRule(item.title).await()
                     items.remove(item)
@@ -80,7 +81,7 @@ class BlacklistViewModel(context: Context) : BaseObservable() {
     }
 
     init {
-        runBlocking {
+        launch(UI) {
             items.addAll(BlacklistRepository.getRules().await().map {
                 BlacklistItemViewModel(it, {
                 }, {

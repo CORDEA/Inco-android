@@ -6,7 +6,8 @@ import android.view.View
 import jp.cordea.inco.activities.RuleActivity
 import jp.cordea.inco.models.Rule
 import jp.cordea.inco.repositories.BlacklistRepository
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 
 class RuleViewModel(intent: Intent, onFinish: () -> Unit) {
 
@@ -26,7 +27,7 @@ class RuleViewModel(intent: Intent, onFinish: () -> Unit) {
             return@OnClickListener
         }
 
-        runBlocking {
+        launch(UI) {
             BlacklistRepository.updateRule(Rule(regex)).await()
             onFinish()
         }
