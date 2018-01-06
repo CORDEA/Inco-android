@@ -1,54 +1,33 @@
 package jp.cordea.inco
 
+import android.content.Context
+import android.support.annotation.RawRes
 import android.util.Base64
-import java.security.SecureRandom
+import java.io.InputStreamReader
+import java.security.KeyFactory
+import java.security.spec.PKCS8EncodedKeySpec
 import javax.crypto.Cipher
-import javax.crypto.spec.GCMParameterSpec
-import javax.crypto.spec.SecretKeySpec
 
-class CipherUtils {
+object CipherUtils {
 
-    companion object {
-        private val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+    private val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
 
-        private fun getSecretKeySpec(key: String): SecretKeySpec =
-                Base64.decode(key, Base64.DEFAULT).let {
-                    SecretKeySpec(it, "AES")
-                }
+    fun readPem(context: Context, @RawRes resId: Int): String =
+            InputStreamReader(
+                    context.resources.openRawResource(resId)).use {
+                it.readText()
+            }.replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                    .replace("-----END RSA PRIVATE KEY-----", "")
+                    .replace("\n", "")
 
-        private fun getGcmParameterSpec(nonce: String): GCMParameterSpec =
-                Base64.decode(nonce, Base64.DEFAULT).let {
-                    GCMParameterSpec(128, it)
-                }
+    fun decrypt(text: String, key: String): String {
+        val decodedKey = Base64.decode(key, Base64.DEFAULT)
+        val decodedText = Base64.decode(text, Base64.DEFAULT)
+        val factory = KeyFactory.getInstance("RSA")
 
-        fun generateKey(): String {
-            val random = SecureRandom()
-            val bytes = ByteArray(256 / 8)
-            random.nextBytes(bytes)
-            return Base64.encode(bytes, Base64.DEFAULT).toString(Charsets.ISO_8859_1)
-        }
-
-        fun generateNonce(): String {
-            val random = SecureRandom()
-            val bytes = ByteArray(96 / 8)
-            random.nextBytes(bytes)
-            return Base64.encode(bytes, Base64.DEFAULT).toString(Charsets.ISO_8859_1)
-        }
-
-        fun encrypt(text: String, key: String, nonce: String): String {
-            val spec = getSecretKeySpec(key)
-            val gcmSpec = getGcmParameterSpec(nonce)
-            cipher.init(Cipher.ENCRYPT_MODE, spec, gcmSpec)
-            val bytes = cipher.doFinal(text.toByteArray(Charsets.ISO_8859_1))
-            return Base64.encodeToString(bytes, Base64.DEFAULT)
-        }
-
-        fun decrypt(text: String, key: String, nonce: String): String {
-            val decoded = Base64.decode(text, Base64.DEFAULT)
-            val spec = getSecretKeySpec(key)
-            val gcmSpec = getGcmParameterSpec(nonce)
-            cipher.init(Cipher.DECRYPT_MODE, spec, gcmSpec)
-            return cipher.doFinal(decoded).toString(Charsets.ISO_8859_1)
-        }
+        val spec = PKCS8EncodedKeySpec(decodedKey)
+        val privateKey = factory.generatePrivate(spec)
+        cipher.init(Cipher.DECRYPT_MODE, privateKey)
+        return cipher.doFinal(decodedText).toString(Charsets.UTF_8).trimEnd('\n')
     }
 }

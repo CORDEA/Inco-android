@@ -3,17 +3,14 @@ package jp.cordea.inco.viewmodels
 import android.content.Context
 import android.content.Intent
 import android.databinding.BaseObservable
-import android.databinding.Bindable
-import android.support.design.widget.BottomSheetBehavior
-import android.view.View
 import android.widget.AdapterView
-import jp.cordea.inco.BR
-import jp.cordea.inco.Key
 import jp.cordea.inco.R
 import jp.cordea.inco.activities.HistoryActivity
 import jp.cordea.inco.adapters.BindingListAdapter
 import jp.cordea.inco.repositories.HistoryRepository
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
+import ru.gildor.coroutines.retrofit.await
 
 class HistoryViewModel(
         context: Context,
@@ -25,36 +22,9 @@ class HistoryViewModel(
                 Intent(context, HistoryActivity::class.java)
     }
 
-    private val key = Key.getCipherKey(context)
-
-    private val nonce = Key.getNonce(context)
-
-    val items = arrayListOf<HistoryItemViewModel>()
+    private val items = arrayListOf<HistoryItemViewModel>()
 
     private var selectedPosition = -1
-
-    @Bindable
-    var bottomSheetTitle = ""
-
-    val bottomSheetItem = BottomSheetItemViewModel(
-            R.string.history_delete,
-            R.drawable.ic_delete_black_24dp,
-            View.OnClickListener {
-                runBlocking {
-                    val item = items[selectedPosition]
-                    HistoryRepository.deleteHistory(item.title).await()
-                    items.remove(item)
-                    adapter.setItems(items)
-                    selectedPosition = -1
-                }
-
-                state = BottomSheetBehavior.STATE_HIDDEN
-                notifyPropertyChanged(BR.state)
-            }
-    )
-
-    @Bindable
-    var state = BottomSheetBehavior.STATE_HIDDEN
 
     val adapter = BindingListAdapter(context, R.layout.list_item_history, items)
 
@@ -69,17 +39,14 @@ class HistoryViewModel(
     }
 
     init {
-        runBlocking {
+        launch(UI) {
+            val histories = HistoryRepository.getHistories().await()
             items.addAll(
-                    HistoryRepository.getHistories().await().map {
-                        val title = HistoryRepository.decryptUrl(it.url, key, nonce)
+                    histories.map {
+                        val title = HistoryRepository.decryptUrl(context, it.url)
                         HistoryItemViewModel(title, it, {
                             onRequestPage(MainViewModel.createIntent(it.url))
                         }, {
-                            state = BottomSheetBehavior.STATE_COLLAPSED
-                            bottomSheetTitle = it.url
-                            notifyPropertyChanged(BR.state)
-                            notifyPropertyChanged(BR.bottomSheetTitle)
                         })
                     })
             adapter.setItems(items)
